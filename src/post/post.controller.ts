@@ -10,27 +10,26 @@ import {
     Query,
     Req,
   } from '@nestjs/common';
-  import { Request } from 'express';
-  import { CreatePostDTO } from './create-posts.dto';
-  import { PostsService } from './posts.service';
-  import { ApiParam, ApiQuery } from '@nestjs/swagger';
+  import { CreatePostDTO } from './create-post.dto';
+  import { Posts } from './post.entity';
   import { JwtPayloadDTO } from 'src/auth/dto/jwt-payload.dto';
-  import { Posts } from './posts.entity';
+  import { PostService } from './post.service';
+  import { ApiParam, ApiQuery } from '@nestjs/swagger';
   
   @Controller('post')
   export class PostController {
-    constructor(private readonly postService: PostsService) {}
+    constructor(private readonly postService: PostService) {}
   
     @Post()
-    async create(@Req() request: Request, @Body() createPostDTO: CreatePostDTO): Promise<void> {
+    async create(@Req() request: Request, @Body() createPostDTO: CreatePostDTO) {
       const userJwtPayLoad: JwtPayloadDTO = request['user'];
   
-      const post: Posts = new Posts();
-      post.content = createPostDTO.content;
-      post.image_url = createPostDTO.image_url;
-      post.title = createPostDTO.title;
-      post.user_id = userJwtPayLoad.sub;
-      await this.postService.save(post);
+      const posts: Posts = new Posts();
+      posts.content = createPostDTO.content;
+      posts.image_url = createPostDTO.image_url;
+      posts.title = createPostDTO.title;
+      posts.user_id = userJwtPayLoad.sub;
+      await this.postService.save(posts);
     }
   
     @Get()
@@ -47,7 +46,7 @@ import {
   
     @Get(':id')
     @ApiParam({ name: 'id', type: Number, description: 'ID of the post' })
-    async findOne(@Req() request: Request, @Param('id') id: number): Promise<Posts> {
+    async findOne(@Req() request: Request, @Param('id') id: number) {
       const userJwtPayLoad: JwtPayloadDTO = request['user'];
       return await this.postService.findByUserIdAndPostId(userJwtPayLoad.sub, id);
     }
@@ -57,14 +56,16 @@ import {
     async updateOne(
       @Req() request: Request,
       @Param('id') id: number,
-      @Body() createPostDTO: CreatePostDTO
-    ): Promise<void> {
+      @Body() createPostDTO: CreatePostDTO,
+    ) {
       const userJwtPayLoad: JwtPayloadDTO = request['user'];
-      const post: Posts = await this.postService.findByUserIdAndPostId(userJwtPayLoad.sub, id);
-      if (!post || post.id == null) {
-        throw new NotFoundException('Post not found');
+      const post: Posts = await this.postService.findByUserIdAndPostId(
+        userJwtPayLoad.sub,
+        id,
+      );
+      if (post.id == null) {
+        throw new NotFoundException();
       }
-  
       post.content = createPostDTO.content;
       post.image_url = createPostDTO.image_url;
       post.title = createPostDTO.title;
@@ -73,13 +74,17 @@ import {
   
     @Delete(':id')
     @ApiParam({ name: 'id', type: Number, description: 'ID of the post' })
-    async deleteOne(@Req() request: Request, @Param('id') id: number): Promise<void> {
+    async deleteOne(@Req() request: Request, @Param('id') id: number) {
       const userJwtPayLoad: JwtPayloadDTO = request['user'];
-      const post: Posts = await this.postService.findByUserIdAndPostId(userJwtPayLoad.sub, id);
-      if (!post || post.id == null) {
-        throw new NotFoundException('Post not found');
+      const post: Posts = await this.postService.findByUserIdAndPostId(
+        userJwtPayLoad.sub,
+        id,
+      );
+      if (post.id == null) {
+        throw new NotFoundException();
       }
   
       await this.postService.deleteById(id);
     }
   }
+  

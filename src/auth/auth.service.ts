@@ -5,11 +5,11 @@ import {
     UnauthorizedException,
   } from '@nestjs/common';
   import { JwtService } from '@nestjs/jwt';
-  import { RegisterDTO } from './dto/register.dto';
-  import { UserService } from 'src/user/user.service';
   import { User } from 'src/user/user.entity';
+  import { UserService } from 'src/user/user.service';
   import * as bcrypt from 'bcrypt';
   import { JwtPayloadDTO } from './dto/jwt-payload.dto';
+  import { RegisterDTO } from './dto/register.dto';
   
   @Injectable()
   export class AuthService {
@@ -23,7 +23,6 @@ import {
       if (user == null || !bcrypt.compareSync(password, user?.password_hash)) {
         throw new UnauthorizedException();
       }
-  
       const payload: JwtPayloadDTO = { sub: user.id, email: user.email };
       return {
         access_token: await this.jwtService.signAsync(payload),

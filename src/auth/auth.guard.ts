@@ -14,6 +14,7 @@ import {
       private jwtService: JwtService,
       private configService: ConfigService,
     ) {}
+  
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const request = context.switchToHttp().getRequest<Request>();
   
@@ -26,6 +27,7 @@ import {
       if (!token) {
         throw new UnauthorizedException();
       }
+  
       try {
         const payload = await this.jwtService.verifyAsync(token, {
           secret: this.configService.get<string>('JWT_SECRET'),
@@ -34,6 +36,7 @@ import {
       } catch {
         throw new UnauthorizedException();
       }
+  
       return true;
     }
   
